@@ -1,0 +1,57 @@
+//@version=5
+indicator("KC Outlier", overlay=true)
+
+// Inputs for Keltner Channel settings
+length = input.int(20, title="Length")
+multiplier = input.float(3, title="Multiplier")
+
+// Calculate Keltner Channel
+basis = ta.sma(hlc3, length)
+atr = ta.sma(ta.tr, length)
+upper = basis + atr * multiplier
+lower = basis - atr * multiplier
+
+// Plot Keltner Channel
+plot(basis, color=color.blue, title="Basis")
+plot(upper, color=color.blue, title="Upper Channel")
+plot(lower, color=color.blue, title="Lower Channel")
+
+// Highlight bars that go outside the Keltner Channel
+aboveUpper = close > upper
+belowLower = close < lower
+
+barcolor(aboveUpper ? color.purple : na, title="Above Upper Channel")
+barcolor(belowLower ? color.purple : na, title="Below Lower Channel")
+
+// Determine if the current candle is moving closer to the mean compared to the previous candle
+previous_above_upper = ta.valuewhen(aboveUpper, close, 1)
+previous_below_lower = ta.valuewhen(belowLower, close, 1)
+
+moving_closer_above = na(previous_above_upper) ? false : (aboveUpper and close < previous_above_upper and close > basis)
+moving_closer_below = na(previous_below_lower) ? false : (belowLower and close > previous_below_lower and close < basis)
+
+// Plot emoji visual marker when a highlighted candle is followed by another candle moving closer to the mean
+plotshape(series=moving_closer_above, location=location.abovebar, color=color.red, style=shape.labeldown, text='⬇️', size=size.small)
+plotshape(series=moving_closer_below, location=location.belowbar, color=color.green, style=shape.labelup, text='⬆️', size=size.small)
+
+// Track consecutive arrows
+var int consecutiveAbove = 0
+var int consecutiveBelow = 0
+
+if (moving_closer_above)
+    consecutiveAbove := consecutiveAbove + 1
+    consecutiveBelow := 0
+else if (moving_closer_below)
+    consecutiveAbove := 0
+    consecutiveBelow := consecutiveBelow + 1
+else
+    consecutiveAbove := 0
+    consecutiveBelow := 0
+
+// Determine if there are two consecutive arrows
+two_consecutive_above = consecutiveAbove >= 2
+two_consecutive_below = consecutiveBelow >= 2
+
+// Plot background color when two consecutive arrows are detected
+bgcolor(two_consecutive_above ? color.new(color.red, 70) : na)
+bgcolor(two_consecutive_below ? color.new(color.green, 70) : na)
