@@ -1,2 +1,2 @@
 # keltner_channel_outlier
-KC Outlier script written in PineScript to be used with TradingView Charts.
+This basic indicator overlays icons on a price chart to highlight when prices move above or below the Keltner Channel, signaling potential reversals back to the median. It uses arrows to mark these outliers, aiding in identifying mean reversion trade opportunities.
